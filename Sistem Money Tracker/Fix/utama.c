@@ -2,12 +2,26 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <conio.h>
+#include <windows.h>
+#include <time.h>
 
 // --- KONFIGURASI & STRUKTUR DATA ---
 
 #define MAX_DAYS_IN_MONTH 31
 #define FILENAME_FORMAT "keuangan_%02d_%d.txt"
 #define NUM_EXPENSE_CATEGORIES 9
+
+// Konfigurasi Area Game
+#define WIDTH 10
+#define HEIGHT 20
+
+// Definisi kode warna
+#define RED     "\033[0;31m"
+#define GREEN   "\033[0;32m"
+#define YELLOW  "\033[0;33m"
+#define BLUE    "\033[0;34m"
+#define RESET   "\033[0m"
 
 // Kategori Pengeluaran
 const char *EXPENSE_CATEGORIES[] = {
@@ -25,6 +39,147 @@ typedef struct {
 // --- VARIABEL GLOBAL ---
 int current_month, current_year;
 DailyFinance monthData[MAX_DAYS_IN_MONTH];
+
+    // Variabel Game
+int playerX;
+int score;
+int coinX, coinY;
+int gameOver;
+
+// --- FUNGSI GAME SEDERHANA ---
+// Fungsi untuk menyembunyikan kursor agar tampilan lebih bersih
+void hideCursor() {
+    HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_CURSOR_INFO info;
+    info.dwSize = 100;
+    info.bVisible = FALSE;
+    SetConsoleCursorInfo(consoleHandle, &info);
+}
+
+// Fungsi untuk memindahkan posisi kursor (menghindari flickering dibanding system("cls"))
+void gotoxy(int x, int y) {
+    COORD coord;
+    coord.X = x;
+    coord.Y = y;
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
+}
+
+void setup() {
+    gameOver = 0;
+    score = 0;
+    playerX = WIDTH / 2; // Pemain mulai di tengah
+    
+    // Posisi awal koin
+    srand(time(0));
+    coinX = rand() % (WIDTH - 2) + 1;
+    coinY = 0;
+    
+    hideCursor();
+}
+
+void draw() {
+    // Kembali ke titik 0,0 daripada menghapus layar (mengurangi kedip)
+    gotoxy(0, 0);
+
+    // Gambar batas atas
+    for (int i = 0; i < WIDTH + 2; i++) printf("#");
+    printf("\n");
+
+    // Gambar area permainan
+    for (int i = 0; i < HEIGHT; i++) {
+        for (int j = 0; j < WIDTH; j++) {
+            if (j == 0) printf("#"); // Dinding kiri
+
+            if (i == coinY && j == coinX) {
+                printf(YELLOW "$" RESET); // Gambar Koin
+            }
+            else if (i == HEIGHT - 1 && j == playerX) {
+                printf("U"); // Gambar Pemain (Keranjang)
+            }
+            else {
+                printf(" "); // Ruang kosong
+            }
+
+            if (j == WIDTH - 1) printf("#"); // Dinding kanan
+        }
+        printf("\n");
+    }
+
+    // Gambar batas bawah
+    for (int i = 0; i < WIDTH + 2; i++) printf("#");
+    printf("\n");
+
+    // Tampilkan Skor & Kontrol
+    printf("Skor: %d\n", score);
+    printf("Kontrol: 'a' (Kiri) | 'd' (Kanan) | 'x' (Keluar)\n");
+}
+
+void input() {
+    if (_kbhit()) { // Mengecek apakah ada tombol yang ditekan
+        char current = _getch();
+        switch (current) {
+            case 'a': // Gerak Kiri
+                if (playerX > 0) playerX--;
+                break;
+            case 'd': // Gerak Kanan
+                if (playerX < WIDTH - 1) playerX++;
+                break;
+            case 'x': // Keluar game
+                gameOver = 1;
+                break;
+        }
+    }
+}
+
+void logic() {
+    // Gerakkan koin ke bawah
+    coinY++;
+
+    // Cek apakah koin tertangkap
+    if (coinY == HEIGHT - 1) {
+        if (coinX == playerX) {
+            score += 10; // Tambah skor
+            // Reset koin ke atas di posisi acak baru
+            coinX = rand() % (WIDTH - 2) + 1;
+            coinY = 0;
+        }
+    }
+
+    // Cek jika koin menyentuh tanah (melewati pemain)
+    if (coinY >= HEIGHT) {
+        // Game Over jika koin jatuh (opsional, bisa diubah jadi kurangi nyawa)
+        gameOver = 1; 
+    }
+}
+
+int runGame() {
+    printf("Apakah anda ingin bermain game menangkap koin? (y/n): ");
+    char choice;
+    scanf(" %c", &choice);
+    if (tolower(choice) != 'y') {
+        return 0;
+    }
+    else {
+        setup();
+
+        while (!gameOver) {
+            draw();
+            input();
+            logic();
+            Sleep(120); // Mengatur kecepatan game (makin kecil makin cepat)
+        }
+
+        // Pesan Game Over
+        gotoxy(0, HEIGHT + 4);
+        printf("\n=== GAME OVER ===\n");
+        printf("Skor Akhir Anda: %d\n", score);
+        printf("Tekan apa saja untuk keluar...");
+        _getch();
+
+        return 0;
+    }
+
+}
 
 // --- FUNGSI UTILITAS ---
 
@@ -209,21 +364,49 @@ void handleEdit() {
     printf("--- EDIT DATA BULAN %d/%d ---\n", current_month, current_year);
     
     int days = getDaysInMonth(current_month, current_year);
-    printf("Data Saat Ini:\n");
-    printf("-------------------------------------------------------------------------------------------------\n");
-    printf("%-7s | %-15s | %-s\n", "Tanggal", "Pemasukan", "Total Pengeluaran");
-    printf("-------------------------------------------------------------------------------------------------\n");
     
+    // Tampilkan header tabel
+    printf("\n");
+    printf("+--------+------------+");
+    for(int i = 0; i < NUM_EXPENSE_CATEGORIES; i++) {
+        printf("-------------+");
+    }
+    printf("------------+\n");
+    
+    printf("| %-6s | %-10s |", "Tanggal", "Pemasukan");
+    for(int i = 0; i < NUM_EXPENSE_CATEGORIES; i++) {
+        printf(" %-11s |", EXPENSE_CATEGORIES[i]);
+    }
+    printf(" %-10s |\n", "Total");
+    
+    printf("+--------+------------+");
+    for(int i = 0; i < NUM_EXPENSE_CATEGORIES; i++) {
+        printf("-------------+");
+    }
+    printf("------------+\n");
+    
+    // Tampilkan data
     for (int i = 0; i < days; i++) {
         double total_expense = 0;
         for(int j=0; j<NUM_EXPENSE_CATEGORIES; j++) {
             total_expense += monthData[i].expenses[j];
         }
+        
+        // Hanya tampilkan baris jika ada data (pendapatan atau pengeluaran)
         if (monthData[i].income > 0 || total_expense > 0) {
-            printf("%-7d | %-15.2f | %-15.2f\n", monthData[i].day, monthData[i].income, total_expense);
+            printf("| %-6d | %-10.2f |", monthData[i].day, monthData[i].income);
+            for(int j=0; j<NUM_EXPENSE_CATEGORIES; j++) {
+                printf(" %-11.2f |", monthData[i].expenses[j]);
+            }
+            printf(" %-10.2f |\n", total_expense);
         }
     }
-    printf("-------------------------------------------------------------------------------------------------\n");
+    
+    printf("+--------+------------+");
+    for(int i = 0; i < NUM_EXPENSE_CATEGORIES; i++) {
+        printf("-------------+");
+    }
+    printf("------------+\n");
 
     int day;
     printf("\nMasukkan tanggal yang ingin diedit (1-%d): ", days);
@@ -260,6 +443,51 @@ void handleReport() {
     double needs = 0, wants = 0;
     int days = getDaysInMonth(current_month, current_year);
 
+    // Tampilkan header tabel
+    printf("\n--- TABEL DATA HARIAN ---\n");
+    printf("\n");
+    printf("+--------+------------+");
+    for(int i = 0; i < NUM_EXPENSE_CATEGORIES; i++) {
+        printf("-------------+");
+    }
+    printf("------------+\n");
+    
+    printf("| %-6s | %-10s |", "Tanggal", "Pemasukan");
+    for(int i = 0; i < NUM_EXPENSE_CATEGORIES; i++) {
+        printf(" %-11s |", EXPENSE_CATEGORIES[i]);
+    }
+    printf(" %-10s |\n", "Total");
+    
+    printf("+--------+------------+");
+    for(int i = 0; i < NUM_EXPENSE_CATEGORIES; i++) {
+        printf("-------------+");
+    }
+    printf("------------+\n");
+    
+    // Tampilkan data
+    for (int i = 0; i < days; i++) {
+        double total_expense = 0;
+        for(int j=0; j<NUM_EXPENSE_CATEGORIES; j++) {
+            total_expense += monthData[i].expenses[j];
+        }
+        
+        // Hanya tampilkan baris jika ada data (pendapatan atau pengeluaran)
+        if (monthData[i].income > 0 || total_expense > 0) {
+            printf("| %-6d | %-10.2f |", monthData[i].day, monthData[i].income);
+            for(int j=0; j<NUM_EXPENSE_CATEGORIES; j++) {
+                printf(" %-11.2f |", monthData[i].expenses[j]);
+            }
+            printf(" %-10.2f |\n", total_expense);
+        }
+    }
+    
+    printf("+--------+------------+");
+    for(int i = 0; i < NUM_EXPENSE_CATEGORIES; i++) {
+        printf("-------------+");
+    }
+    printf("------------+\n");
+
+    // Hitung total
     for (int i = 0; i < days; i++) {
         total_income += monthData[i].income;
         
@@ -318,6 +546,8 @@ void handleReport() {
     }
     
     pause();
+    clearScreen();
+    runGame();
 }
 
 void handleChangeMonth() {
@@ -345,7 +575,9 @@ void handleChangeMonth() {
 
 int main() {
     // Inisialisasi
-    printf("=== PROGRAM CATATAN KEUANGAN PRIBADI ===\n");
+    printf("=== ================================ ===\n");
+    printf(YELLOW "=== PROGRAM CATATAN KEUANGAN PRIBADI ===\n" RESET);
+    printf("=== ================================ ===\n");
     printf("Masukkan bulan (1-12): ");
     scanf("%d", &current_month);
     printf("Masukkan tahun: ");
@@ -362,10 +594,10 @@ int main() {
     do {
         clearScreen();
         printf("=== MENU UTAMA (Bulan: %d/%d) ===\n", current_month, current_year);
-        printf("1. Tambah Pemasukan\n");
-        printf("2. Tambah Pengeluaran\n");
+        printf(GREEN "1. Tambah Pemasukan\n" RESET);
+        printf(RED "2. Tambah Pengeluaran\n" RESET);
         printf("3. Edit Data Bulan Ini\n");
-        printf("4. Laporan & Analisis Keuangan\n");
+        printf(YELLOW "4. Laporan & Analisis Keuangan\n" RESET);
         printf("5. Ganti Bulan/Tahun\n");
         printf("6. Keluar\n");
         printf("=====================================\n");
@@ -390,7 +622,7 @@ int main() {
                 break;
             case 6:
                 printf("Menyimpan data terakhir dan keluar dari program. Sampai jumpa!\n");
-                saveData(); // Pastikan data tersimpan sebelum keluar
+                saveData(); 
                 break;
             default:
                 printf("Pilihan tidak valid. Silakan coba lagi.\n");

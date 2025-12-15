@@ -570,3 +570,5 @@ int main() {
 // tes empat
 
 // tes lima
+
+// tes enam

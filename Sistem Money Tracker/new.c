@@ -560,15 +560,3 @@ int main() {
 
     return 0;
 }
-
-// Halloooo
-
-// tes dua
-
-// tes tiga
-
-// tes empat
-
-// tes lima
-
-// tes enam

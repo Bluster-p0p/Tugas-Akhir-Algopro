@@ -25,7 +25,7 @@
 
 // Kategori Pengeluaran
 const char *EXPENSE_CATEGORIES[] = {
-    "Belanja", "Makanan", "Transportasi", "Kecantikan", 
+    "Belanja", "Makanan", "Transport", "Kecantikan", 
     "Olahraga", "Pakaian", "Kesehatan", "Edukasi", "Bulanan"
 };
 
@@ -40,14 +40,14 @@ typedef struct {
 int current_month, current_year;
 DailyFinance monthData[MAX_DAYS_IN_MONTH];
 
-    // Variabel Game
+// VARIABEL GAME
 int playerX;
 int score;
 int coinX, coinY;
 int gameOver;
 
-// --- FUNGSI GAME SEDERHANA ---
-// Fungsi untuk menyembunyikan kursor agar tampilan lebih bersih
+// --- FUNGSI GAME  ---
+// Fungsi untuk menyembunyikan kursor 
 void hideCursor() {
     HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_CURSOR_INFO info;
@@ -78,7 +78,7 @@ void setup() {
 }
 
 void draw() {
-    // Kembali ke titik 0,0 daripada menghapus layar (mengurangi kedip)
+    // Kembali ke titik 0,0 
     gotoxy(0, 0);
 
     // Gambar batas atas
@@ -94,7 +94,7 @@ void draw() {
                 printf(YELLOW "$" RESET); // Gambar Koin
             }
             else if (i == HEIGHT - 1 && j == playerX) {
-                printf("U"); // Gambar Pemain (Keranjang)
+                printf("U"); // Gambar Pemain 
             }
             else {
                 printf(" "); // Ruang kosong
@@ -153,7 +153,7 @@ void logic() {
 }
 
 int runGame() {
-    printf("Apakah anda ingin bermain game menangkap koin? (y/n): ");
+    printf("Apakah anda ingin bermain game menangkap koin untuk mengatasi stress? (y/n): ");
     char choice;
     scanf(" %c", &choice);
     if (tolower(choice) != 'y') {
@@ -166,7 +166,7 @@ int runGame() {
             draw();
             input();
             logic();
-            Sleep(120); // Mengatur kecepatan game (makin kecil makin cepat)
+            Sleep(120); // Mengatur kecepatan game
         }
 
         // Pesan Game Over
@@ -281,7 +281,22 @@ void loadData() {
 
 // --- FUNGSI MENU ---
 
-void handleIncome() {
+void Splashscreen(){
+    clearScreen();
+    printf("=== ================================ ===\n");
+    printf("===" YELLOW " PROGRAM CATATAN KEUANGAN PRIBADI " RESET "===\n");
+    printf("=== ================================ ===\n");
+    printf("Anggota Kelompok: \n");
+    printf("1. Dzulfikar Nur Anam \n");
+    printf("2. Fairuz Imanulhaq \n");
+    printf("3. Farrel Lutfi Pranowo \n");
+    printf("4. Hanif Hening Putranto \n");
+
+    pause();
+    clearScreen();
+}
+
+void handleIncome() { // Fungsi Input Pemasukan
     clearScreen();
     printf("--- TAMBAH PEMASUKAN ---\n");
     int days = getDaysInMonth(current_month, current_year);
@@ -311,17 +326,11 @@ void handleIncome() {
     pause();
 }
 
-void handleExpense() {
+void handleExpense() { // Fungsi Input Pengeluaran
     clearScreen();
     printf("--- TAMBAH PENGELUARAN ---\n");
     
-    // Pilih kategori
-    printf("Pilih jenis pengeluaran:\n");
-    for (int i = 0; i < NUM_EXPENSE_CATEGORIES; i++) {
-        printf("%d. %s\n", i + 1, EXPENSE_CATEGORIES[i]);
-    }
-    
-    int category_choice;
+    // Pilih kategori Pengeluaran
     printf("Pilihan (1-%d): ", NUM_EXPENSE_CATEGORIES);
     scanf("%d", &category_choice);
 
@@ -331,7 +340,7 @@ void handleExpense() {
         return;
     }
 
-    // Pilih tanggal
+    // Pilih tanggal pengeluaran
     int days = getDaysInMonth(current_month, current_year);
     printf("\nRentang tanggal yang valid: 1 - %d\n", days);
     int day;
@@ -344,7 +353,7 @@ void handleExpense() {
         return;
     }
 
-    // Masukkan nominal
+    // Masukkan nominal pengeluaran
     double amount;
     printf("Masukkan nominal pengeluaran: ");
     scanf("%lf", &amount);
@@ -359,7 +368,7 @@ void handleExpense() {
     pause();
 }
 
-void handleEdit() {
+void handleEdit() { // Fungsi Edit Data Bulanan
     clearScreen();
     printf("--- EDIT DATA BULAN %d/%d ---\n", current_month, current_year);
     
@@ -392,7 +401,7 @@ void handleEdit() {
             total_expense += monthData[i].expenses[j];
         }
         
-        // Hanya tampilkan baris jika ada data (pendapatan atau pengeluaran)
+        // Menampilkan tabel yang berisi data 
         if (monthData[i].income > 0 || total_expense > 0) {
             printf("| %-6d | %-10.2f |", monthData[i].day, monthData[i].income);
             for(int j=0; j<NUM_EXPENSE_CATEGORIES; j++) {
@@ -418,9 +427,10 @@ void handleEdit() {
         return;
     }
 
+    // Input data baru
     printf("\n--- Edit Data untuk Tanggal %d ---\n", day);
     printf("Pemasukan saat ini: %.2f\n", monthData[day - 1].income);
-    printf("Masukkan nominal pemasukan yang benar (masukkan 0 jika tidak ada): ");
+    printf("Masukkan nominal pemasukan yang benar (masukkan - jika tidak diedit): ");
     scanf("%lf", &monthData[day - 1].income);
 
     for (int i = 0; i < NUM_EXPENSE_CATEGORIES; i++) {
@@ -434,7 +444,7 @@ void handleEdit() {
     pause();
 }
 
-void handleReport() {
+void handleReport() { // Fungsi Laporan & Analisis Keuangan
     clearScreen();
     printf("--- LAPORAN KEUANGAN BULAN %d/%d ---\n", current_month, current_year);
     
@@ -471,7 +481,7 @@ void handleReport() {
             total_expense += monthData[i].expenses[j];
         }
         
-        // Hanya tampilkan baris jika ada data (pendapatan atau pengeluaran)
+        // Tampilkan tabel yang berisi data
         if (monthData[i].income > 0 || total_expense > 0) {
             printf("| %-6d | %-10.2f |", monthData[i].day, monthData[i].income);
             for(int j=0; j<NUM_EXPENSE_CATEGORIES; j++) {
@@ -497,7 +507,6 @@ void handleReport() {
         }
         total_expense += day_expense;
 
-        // Kategorisasi untuk analisis 50/30/20
         // Kebutuhan (Needs): Makanan, Transportasi, Kesehatan, Bulanan
         needs += monthData[i].expenses[1] + monthData[i].expenses[2] + monthData[i].expenses[6] + monthData[i].expenses[8];
         // Keinginan (Wants): Belanja, Kecantikan, Olahraga, Pakaian, Edukasi
@@ -535,11 +544,11 @@ void handleReport() {
         printf("Persentase Tabungan (Target 20%%) : %.2f%%\n", savings_percent);
         
         printf("\nSaran:\n");
-        if (needs_percent > 50) printf("- Pengeluaran kebutuhan Anda melebihi 50%%. Cobalah untuk mengevaluasi anggaran belanjaan dan transportasi.\n");
-        if (wants_percent > 30) printf("- Pengeluaran keinginan Anda melebihi 30%%. Pertimbangkan untuk mengurangi pengeluaran di kategori belanja, hiburan, dll.\n");
-        if (savings_percent < 20) printf("- Tabungan Anda kurang dari 20%%. Upayakan untuk menambah pemasukan atau mengurangi pengeluaran agar bisa menabung lebih banyak.\n");
+        if (needs_percent > 50) printf("-" RED " Pengeluaran kebutuhan Anda melebihi 50%%." RESET " Cobalah untuk mengevaluasi anggaran belanjaan dan transportasi.\n");
+        if (wants_percent > 30) printf("-" RED " Pengeluaran keinginan Anda melebihi 30%%." RESET "Pertimbangkan untuk mengurangi pengeluaran di kategori belanja, hiburan, dll.\n");
+        if (savings_percent < 20) printf("-" RED "Tabungan Anda kurang dari 20%%." RESET " Upayakan untuk menambah pemasukan atau mengurangi pengeluaran agar bisa menabung lebih banyak.\n");
         if (needs_percent <= 50 && wants_percent <= 30 && savings_percent >= 20) {
-            printf("- Hebat! Pola keuangan Anda sudah sehat dan sesuai dengan aturan 50/30/20. Pertahankan!\n");
+            printf("- Hebat! Pola keuangan Anda sudah " GREEN "sehat" RESET " dan sesuai dengan aturan 50/30/20. Pertahankan!\n");
         }
     } else {
         printf("Tidak ada pemasukan bulan ini untuk dianalisis.\n");
@@ -550,7 +559,7 @@ void handleReport() {
     runGame();
 }
 
-void handleChangeMonth() {
+void handleChangeMonth() { // Fungsi Ganti Bulan & Tahun
     clearScreen();
     printf("--- GANTI BULAN & TAHUN ---\n");
     printf("Bulan & Tahun saat ini: %d/%d\n", current_month, current_year);
@@ -574,10 +583,8 @@ void handleChangeMonth() {
 // --- FUNGSI UTAMA ---
 
 int main() {
-    // Inisialisasi
-    printf("=== ================================ ===\n");
-    printf(YELLOW "=== PROGRAM CATATAN KEUANGAN PRIBADI ===\n" RESET);
-    printf("=== ================================ ===\n");
+    Splashscreen();
+
     printf("Masukkan bulan (1-12): ");
     scanf("%d", &current_month);
     printf("Masukkan tahun: ");
@@ -588,10 +595,10 @@ int main() {
         return 1;
     }
 
-    loadData(); // Muat data awal
+    loadData();
 
     int choice;
-    do {
+    do { // Perulangan Menu Utama
         clearScreen();
         printf("=== MENU UTAMA (Bulan: %d/%d) ===\n", current_month, current_year);
         printf(GREEN "1. Tambah Pemasukan\n" RESET);
@@ -606,25 +613,25 @@ int main() {
 
         switch (choice) {
             case 1:
-                handleIncome();
+                handleIncome(); // Fungsi Input Pemasukan
                 break;
             case 2:
-                handleExpense();
+                handleExpense(); // Fungsi Input Pengeluaran
                 break;
             case 3:
-                handleEdit();
+                handleEdit(); // Fungsi Edit Data Bulanan
                 break;
             case 4:
-                handleReport();
+                handleReport(); // Fungsi Laporan & Analisis Keuangan
                 break;
             case 5:
-                handleChangeMonth();
+                handleChangeMonth(); // Fungsi Ganti Bulan & Tahun
                 break;
-            case 6:
+            case 6: // Fungsi Keluar & Simpan Data
                 printf("Menyimpan data terakhir dan keluar dari program. Sampai jumpa!\n");
                 saveData(); 
                 break;
-            default:
+            default: // Jika input tidak valid
                 printf("Pilihan tidak valid. Silakan coba lagi.\n");
                 pause();
                 break;

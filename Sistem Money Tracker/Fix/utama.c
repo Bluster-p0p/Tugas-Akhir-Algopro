@@ -1,10 +1,10 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <conio.h>
-#include <windows.h>
-#include <time.h>
+#include <stdlib.h> // untuk genarete random (fungsi game)
+#include <string.h> // untuk fungsi string
+#include <ctype.h> // untuk fungsi tolower()
+#include <conio.h> // fungsi _kbhit() dan _getch() untuk input game
+#include <windows.h> // untuk fungsi Sleep() dan mengatur kursor
+#include <time.h> // untuk fungsi time() pada random
 
 // --- KONFIGURASI & STRUKTUR DATA ---
 
@@ -319,7 +319,7 @@ void handleIncome() { // Fungsi Input Pemasukan
     if (amount > 0) {
         monthData[day - 1].income += amount;
         printf("Pemasukan sebesar %.2f pada tanggal %d berhasil ditambahkan.\n", amount, day);
-        saveData();
+        saveData(); 
     } else {
         printf("Nominal harus positif!\n");
     }
@@ -435,7 +435,7 @@ void handleEdit() { // Fungsi Edit Data Bulanan
 
     for (int i = 0; i < NUM_EXPENSE_CATEGORIES; i++) {
         printf("Pengeluaran %s saat ini: %.2f\n", EXPENSE_CATEGORIES[i], monthData[day - 1].expenses[i]);
-        printf("Masukkan nominal %s yang benar (masukkan 0 jika tidak ada): ", EXPENSE_CATEGORIES[i]);
+        printf("Masukkan nominal %s yang benar (masukkan - jika tidak ada): ", EXPENSE_CATEGORIES[i]);
         scanf("%lf", &monthData[day - 1].expenses[i]);
     }
 
@@ -507,9 +507,9 @@ void handleReport() { // Fungsi Laporan & Analisis Keuangan
         }
         total_expense += day_expense;
 
-        // Kebutuhan (Needs): Makanan, Transportasi, Kesehatan, Bulanan
+        // Klasifikasi kebutuhan : Makanan, Transportasi, Kesehatan, Bulanan
         needs += monthData[i].expenses[1] + monthData[i].expenses[2] + monthData[i].expenses[6] + monthData[i].expenses[8];
-        // Keinginan (Wants): Belanja, Kecantikan, Olahraga, Pakaian, Edukasi
+        // Klasifikasi keinginan : Belanja, Kecantikan, Olahraga, Pakaian, Edukasi
         wants += monthData[i].expenses[0] + monthData[i].expenses[3] + monthData[i].expenses[4] + monthData[i].expenses[5] + monthData[i].expenses[7];
         
         // Laporan mingguan
